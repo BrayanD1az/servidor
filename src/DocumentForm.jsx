@@ -1,38 +1,55 @@
 import React, { useState } from 'react';
 
-const DocumentForm = ({ addDocument }) => {
-  const [docId, setDocId] = useState('');
-  const [docType, setDocType] = useState('');
+const DocumentForm = () => {
   const [docName, setDocName] = useState('');
-  const [file, setFile] = useState(null); // Para el archivo seleccionado
+  const [file, setFile] = useState(null);
+  const [userName, setUserName] = useState(''); // Nombre del usuario
 
-  // Manejar el cambio de archivo
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
-  // Manejar el envío del formulario
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!docId || !docType || !docName || !file) {
+    if (!userName || !docName || !file) {
       alert('Por favor, complete todos los campos');
       return;
     }
 
-    const newDocument = {
-      id: docId,
-      type: docType,
-      name: docName,
-      date: new Date().toLocaleString(),
-    };
+    const formData = new FormData();
+    formData.append('documento', file); // El archivo
+    formData.append('extension', file.type); // Tipo de archivo (ej: application/pdf)
+    formData.append('nombre_archivo', docName); // Nombre del archivo
+    formData.append('fecha_adicion', new Date().toISOString()); // Fecha actual
 
-    // Agregar documento a la lista usando la función pasada desde App
-    addDocument(newDocument);
-    setDocId('');
-    setDocType('');
-    setDocName('');
-    setFile(null);
+    try {
+      const response = await fetch(`http://100.80.83.116:5000/users/bjohnson/documents`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message || 'Documento agregado con éxito');
+        console.log('Respuesta del servidor:', result);
+
+        // Limpia el formulario después de la subida
+        setDocName('');
+        setFile(null);
+        setUserName('');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Ocurrió un error');
+        console.error('Error en la solicitud:', error);
+      }
+    } catch (error) {
+      console.error('Error de conexión con el servidor:', error);
+      alert('Error de conexión con el servidor');
+    }
   };
 
   return (
@@ -40,28 +57,15 @@ const DocumentForm = ({ addDocument }) => {
       <h2 className="text-center mb-4">Formulario de Documentos</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>ID de Documento</label>
+          <label>Nombre de Usuario</label>
           <input
             type="text"
             className="form-control"
-            value={docId}
-            onChange={(e) => setDocId(e.target.value)}
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder="Ingresa el nombre de usuario"
             required
           />
-        </div>
-        <div className="form-group">
-          <label>Tipo de Documento</label>
-          <select
-            className="form-control"
-            value={docType}
-            onChange={(e) => setDocType(e.target.value)}
-            required
-          >
-            <option value="">Seleccionar tipo</option>
-            <option value="PDF">PDF</option>
-            <option value="Word">Word</option>
-            <option value="Excel">Excel</option>
-          </select>
         </div>
         <div className="form-group">
           <label>Nombre de Documento</label>
@@ -70,6 +74,7 @@ const DocumentForm = ({ addDocument }) => {
             className="form-control"
             value={docName}
             onChange={(e) => setDocName(e.target.value)}
+            placeholder="Ingresa el nombre del documento"
             required
           />
         </div>
@@ -83,7 +88,7 @@ const DocumentForm = ({ addDocument }) => {
           />
         </div>
         <button type="submit" className="btn btn-primary">
-          Agregar Documento
+          Subir Documento
         </button>
       </form>
     </div>

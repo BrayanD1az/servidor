@@ -65,7 +65,7 @@ const Portafolio = ({ fileList, deleteDocument, editDocument }) => {
       <table className="table table-striped">
         <thead>
           <tr>
-            <th>No. de Aporte</th>
+            <th>No. del usuario</th>
             <th>Fecha de Registro</th>
             <th>Tipo de Documento</th>
             <th>Nombre de Documento</th>
