@@ -1,0 +1,84 @@
+/* General body styles */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #000000; /* Color de texto principal */
+  background-image: url('fondo-login.jpg'); /* Ruta de la imagen de fondo */
+  background-size: cover; /* Escalar la imagen para cubrir todo el fondo */
+  background-repeat: no-repeat; /* No repetir la imagen */
+  background-attachment: fixed; /* Fijar la imagen para que no se mueva */
+  background-position: center; /* Centrar la imagen */
+}
+
+/* Sidebar styles */
+.dashboard-sideBar {
+  position: fixed; /* Fijar el menú al lado izquierdo */
+  top: 0;
+  left: 0;
+  width: 250px; /* Ancho del menú */
+  height: 100vh; /* Ocupa toda la altura de la ventana */
+  background-color: #000000; /* Fondo negro */
+  color: #fff; /* Texto blanco */
+  z-index: 10; /* Siempre encima del fondo */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3); /* Sombra para destacar el menú */
+  padding: 20px 0;
+}
+
+.dashboard-sideBar-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.dashboard-sideBar-Menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dashboard-sideBar-Menu li {
+  margin: 15px 0;
+}
+
+.dashboard-sideBar-Menu a {
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 20px;
+  display: block;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.dashboard-sideBar-Menu a:hover {
+  background-color: #555555; /* Color al pasar el ratón */
+}
+
+/* Main content styles */
+.dashboard-contentPage {
+  margin-left: 250px; /* Deja espacio para el menú */
+  padding: 20px;
+  min-height: 100vh; /* Asegura que el contenido ocupe al menos toda la ventana */
+  box-sizing: border-box;
+  z-index: 1; /* Mantener debajo del menú */
+  color: #ffffff; /* Color del texto principal */
+}
+
+/* Ajustes generales para el contenido */
+h2 {
+  text-align: center;
+  margin-top: 20px;
+  color: #ffffff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-sideBar {
+    width: 200px; /* Reducir ancho del menú en pantallas pequeñas */
+  }
+
+  .dashboard-contentPage {
+    margin-left: 200px; /* Ajustar contenido al ancho del menú */
+  }
+}
