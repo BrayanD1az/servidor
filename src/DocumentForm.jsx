@@ -1,43 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const DocumentForm = () => {
-  const [docName, setDocName] = useState('');
+  const [docName, setDocName] = useState("");
   const [file, setFile] = useState(null);
-  const [userName, setUserName] = useState(''); // Nombre del usuario
+  const [userName, setUserName] = useState(""); // Nombre del usuario
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    const selectedFile = event.target.files[0];
+    const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+
+    if (selectedFile) {
+      if (!allowedTypes.includes(selectedFile.type)) {
+        alert(
+          "El tipo de archivo no es válido. Solo se permiten PDF, PNG o JPEG."
+        );
+        setFile(null);
+        return;
+      }
+
+      if (selectedFile.size > maxSize) {
+        alert("El archivo supera el tamaño máximo permitido (5 MB).");
+        setFile(null);
+        return;
+      }
+
+      setFile(selectedFile);
+    }
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(",")[1]); // Extrae solo la parte Base64
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!userName || !docName || !file) {
       alert('Por favor, complete todos los campos');
       return;
     }
-
-    const formData = new FormData();
-    formData.append('documento', file); // El archivo
-    formData.append('extension', file.type); // Tipo de archivo (ej: application/pdf)
-    formData.append('nombre_archivo', docName); // Nombre del archivo
-    formData.append('fecha_adicion', new Date().toISOString()); // Fecha actual
-
-    try {
-      const response = await fetch(`http://100.80.83.116:5000/users/bjohnson/documents`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json',
-        },
+  
+    // Convertir el archivo a Base64
+    const toBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]); // Quitar el encabezado "data:*/*;base64,"
+        reader.onerror = (error) => reject(error);
       });
-
+    };
+  
+    try {
+      const base64File = await toBase64(file);
+  
+      // Crear el objeto con los datos
+      const payload = {
+        documents: [
+          {
+            documento: base64File,
+            extension: file.type,
+            nombre_archivo: docName,
+          },
+        ],
+      };
+  
+      // Hacer la solicitud POST al backend
+      const response = await fetch(`http://localhost:5000/users/send/${userName}/documents`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload), // Enviar como JSON
+      });
+  
       if (response.ok) {
         const result = await response.json();
         alert(result.message || 'Documento agregado con éxito');
         console.log('Respuesta del servidor:', result);
-
-        // Limpia el formulario después de la subida
+  
+        // Limpiar el formulario después del envío
         setDocName('');
         setFile(null);
         setUserName('');
@@ -47,10 +94,10 @@ const DocumentForm = () => {
         console.error('Error en la solicitud:', error);
       }
     } catch (error) {
-      console.error('Error de conexión con el servidor:', error);
-      alert('Error de conexión con el servidor');
+      console.error('Error al procesar el archivo:', error);
+      alert('Error al procesar el archivo');
     }
-  };
+  };  
 
   return (
     <div className="container">
@@ -87,7 +134,7 @@ const DocumentForm = () => {
             required
           />
         </div>
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary mt-3">
           Subir Documento
         </button>
       </form>
