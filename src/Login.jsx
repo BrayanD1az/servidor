@@ -11,7 +11,7 @@ const Login = ({ setIsAuthenticated }) => {
     e.preventDefault();
 
     // Verificar usuario y contraseña
-    if (user === 'admin' && password === 'admin') {
+    if (user === 'admin' && password === '12345678') {
       setIsAuthenticated(true); // Cambiar el estado de autenticación
       navigate('/'); // Redirigir a la página principal
     } else {

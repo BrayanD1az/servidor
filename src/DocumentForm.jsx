@@ -1,140 +1,102 @@
 import React, { useState } from "react";
+import Swal from "sweetalert2";
+import axios from "axios";
 
-const DocumentForm = () => {
-  const [docName, setDocName] = useState("");
-  const [file, setFile] = useState(null);
+const UploadDocuments = () => {
   const [userName, setUserName] = useState(""); // Nombre del usuario
+  const [file, setFile] = useState(null); // Archivo seleccionado
+  const [fileName, setFileName] = useState(""); // Nombre del archivo
+  const [fileType, setFileType] = useState(""); // Tipo del archivo
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-    const allowedTypes = ["application/pdf", "image/png", "image/jpeg"];
-    const maxSize = 5 * 1024 * 1024; // 5 MB
-
     if (selectedFile) {
-      if (!allowedTypes.includes(selectedFile.type)) {
-        alert(
-          "El tipo de archivo no es válido. Solo se permiten PDF, PNG o JPEG."
-        );
-        setFile(null);
-        return;
-      }
-
-      if (selectedFile.size > maxSize) {
-        alert("El archivo supera el tamaño máximo permitido (5 MB).");
-        setFile(null);
-        return;
-      }
-
       setFile(selectedFile);
+      setFileName(selectedFile.name);
+      setFileType(selectedFile.type.split("/")[1]); // Obtener la extensión del archivo
     }
-  };
-
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result.split(",")[1]); // Extrae solo la parte Base64
-      reader.onerror = (error) => reject(error);
-    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    if (!userName || !docName || !file) {
-      alert('Por favor, complete todos los campos');
+
+    if (!userName || !file || !fileName || !fileType) {
+      Swal.fire("Por favor completa todos los campos", "", "warning");
       return;
     }
-  
-    // Convertir el archivo a Base64
-    const toBase64 = (file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]); // Quitar el encabezado "data:*/*;base64,"
-        reader.onerror = (error) => reject(error);
-      });
-    };
-  
+
     try {
-      const base64File = await toBase64(file);
-  
-      // Crear el objeto con los datos
-      const payload = {
-        documents: [
-          {
-            documento: base64File,
-            extension: file.type,
-            nombre_archivo: docName,
-          },
-        ],
+      // Leer el archivo como base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = reader.result.split(",")[1]; // Eliminar metadatos
+        const documentData = {
+          documents: [
+            {
+              nombre_archivo: fileName,
+              extension: fileType,
+              documento: base64Data,
+            },
+          ],
+        };
+
+        // Enviar datos al backend
+        const response = await axios.post(
+          `http://127.0.0.1:5000/users/send/${userName}/documents`,
+          documentData,
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        if (response.status === 201) {
+          Swal.fire("Documento subido exitosamente", "", "success");
+          setFile(null);
+          setFileName("");
+          setFileType("");
+          setUserName("");
+        }
       };
-  
-      // Hacer la solicitud POST al backend
-      const response = await fetch(`http://localhost:5000/users/send/${userName}/documents`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload), // Enviar como JSON
-      });
-  
-      if (response.ok) {
-        const result = await response.json();
-        alert(result.message || 'Documento agregado con éxito');
-        console.log('Respuesta del servidor:', result);
-  
-        // Limpiar el formulario después del envío
-        setDocName('');
-        setFile(null);
-        setUserName('');
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Ocurrió un error');
-        console.error('Error en la solicitud:', error);
-      }
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Error al procesar el archivo:', error);
-      alert('Error al procesar el archivo');
+      console.error("Error al subir el documento:", error);
+      Swal.fire("Error al subir el documento", error.response?.data?.error || "", "error");
     }
-  };  
+  };
 
   return (
     <div className="container">
-      <h2 className="text-center mb-4">Formulario de Documentos</h2>
+      <h2 className="text-center mb-4">Subir Documentos</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Nombre de Usuario</label>
+          <label htmlFor="userName">Nombre del Usuario:</label>
           <input
             type="text"
+            id="userName"
             className="form-control"
             value={userName}
             onChange={(e) => setUserName(e.target.value)}
-            placeholder="Ingresa el nombre de usuario"
-            required
+            placeholder="Ingresa el nombre del usuario"
           />
         </div>
         <div className="form-group">
-          <label>Nombre de Documento</label>
-          <input
-            type="text"
-            className="form-control"
-            value={docName}
-            onChange={(e) => setDocName(e.target.value)}
-            placeholder="Ingresa el nombre del documento"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Subir Documento</label>
+          <label htmlFor="file">Seleccionar Archivo:</label>
           <input
             type="file"
+            id="file"
             className="form-control"
             onChange={handleFileChange}
-            required
           />
         </div>
-        <button type="submit" className="btn btn-primary mt-3">
+        <div className="form-group">
+          <label htmlFor="fileName">Nombre del Archivo:</label>
+          <input
+            type="text"
+            id="fileName"
+            className="form-control"
+            value={fileName}
+            readOnly
+          />
+        </div>
+        <button type="submit" className="btn btn-primary btn-block">
           Subir Documento
         </button>
       </form>
@@ -142,4 +104,4 @@ const DocumentForm = () => {
   );
 };
 
-export default DocumentForm;
+export default UploadDocuments;

@@ -45,7 +45,7 @@ const App = () => {
           <section className="full-box cover dashboard-sideBar">
             <div className="full-box dashboard-sideBar-ct">
               <div className="full-box text-uppercase text-center text-titles dashboard-sideBar-title">
-                COBAEV 23
+                servidor
               </div>
 
               {/* Sidebar Menu */}
