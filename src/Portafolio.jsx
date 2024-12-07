@@ -27,19 +27,39 @@ const Portafolio = () => {
     fetchDocuments();
   }, [userName]);
 
-  const handleDownload = async (url, fileName) => {
+  // Manejar descarga de archivo
+  const handleDownload = async (file) => {
     try {
-      const response = await axios.get(url, { responseType: 'blob' });
-      const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = urlBlob;
-      link.setAttribute('download', fileName);
+      // Extraer datos del archivo
+      const { documento, nombre_archivo } = file;
+
+      // Separar encabezado y datos base64
+      const base64ContentArray = documento.split(",");
+      const base64Data = base64ContentArray.length > 1 ? base64ContentArray[1] : documento;
+
+      // Convertir base64 a Blob
+      const binaryString = atob(base64Data);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Crear un archivo Blob
+      const blob = new Blob([bytes], { type: file.extension });
+
+      // Crear URL para descargar
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.setAttribute("download", `${nombre_archivo}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error('Error al descargar el archivo:', error);
-      Swal.fire('Error al descargar el archivo', '', 'error');
+      console.error("Error al descargar el archivo:", error);
+      Swal.fire("Error al descargar el archivo", "", "error");
     }
   };
 
@@ -96,16 +116,16 @@ const Portafolio = () => {
             </thead>
             <tbody>
               {filteredDocuments.length > 0 ? (
-                filteredDocuments.map((file) => (
-                  <tr key={file.id}>
-                    <td>{file.id}</td>
+                filteredDocuments.map((file, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
                     <td>{new Date(file.fecha_adicion).toLocaleString()}</td>
                     <td>{file.extension}</td>
                     <td>{file.nombre_archivo}</td>
                     <td>
                       <button
                         className="btn btn-primary"
-                        onClick={() => handleDownload(file.download_url, file.nombre_archivo)}
+                        onClick={() => handleDownload(file)}
                       >
                         Descargar
                       </button>
