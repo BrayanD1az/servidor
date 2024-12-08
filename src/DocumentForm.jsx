@@ -1,19 +1,20 @@
-import React, { useState } from "react";
-import Swal from "sweetalert2";
-import axios from "axios";
+import React, { useState } from 'react';
+import Swal from 'sweetalert2';
+import axios from 'axios';
+import API_BASE_URL from './config';
 
 const UploadDocuments = () => {
-  const [userName, setUserName] = useState(""); // Nombre del usuario
-  const [file, setFile] = useState(null); // Archivo seleccionado
-  const [fileName, setFileName] = useState(""); // Nombre del archivo
-  const [fileType, setFileType] = useState(""); // Tipo del archivo
+  const [userName, setUserName] = useState('');
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [fileType, setFileType] = useState('');
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
       setFileName(selectedFile.name);
-      setFileType(selectedFile.type.split("/")[1]); // Obtener la extensión del archivo
+      setFileType(selectedFile.type.split('/')[1]); // Obtener la extensión del archivo
     }
   };
 
@@ -21,15 +22,14 @@ const UploadDocuments = () => {
     e.preventDefault();
 
     if (!userName || !file || !fileName || !fileType) {
-      Swal.fire("Por favor completa todos los campos", "", "warning");
+      Swal.fire('Por favor completa todos los campos', '', 'warning');
       return;
     }
 
     try {
-      // Leer el archivo como base64
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const base64Data = reader.result.split(",")[1]; // Eliminar metadatos
+        const base64Data = reader.result.split(',')[1]; // Eliminar metadatos
         const documentData = {
           documents: [
             {
@@ -40,25 +40,24 @@ const UploadDocuments = () => {
           ],
         };
 
-        // Enviar datos al backend
         const response = await axios.post(
-          `http://127.0.0.1:5000/users/send/${userName}/documents`,
+          `${API_BASE_URL}/users/send/${userName}/documents`,
           documentData,
-          { headers: { "Content-Type": "application/json" } }
+          { headers: { 'Content-Type': 'application/json' } }
         );
 
         if (response.status === 201) {
-          Swal.fire("Documento subido exitosamente", "", "success");
+          Swal.fire('Documento subido exitosamente', '', 'success');
           setFile(null);
-          setFileName("");
-          setFileType("");
-          setUserName("");
+          setFileName('');
+          setFileType('');
+          setUserName('');
         }
       };
       reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Error al subir el documento:", error);
-      Swal.fire("Error al subir el documento", error.response?.data?.error || "", "error");
+      console.error('Error al subir el documento:', error);
+      Swal.fire('Error al subir el documento', error.response?.data?.error || '', 'error');
     }
   };
 

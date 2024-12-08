@@ -1,21 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import API_BASE_URL from './config';
 
 const Portafolio = () => {
-  const [fileList, setFileList] = useState([]); // Lista de documentos
-  const [loading, setLoading] = useState(true); // Estado para manejar la carga
-  const [userName, setUserName] = useState("usuario1"); // Usuario seleccionado
-  const [searchQuery, setSearchQuery] = useState(""); // Filtro de búsqueda
+  const [fileList, setFileList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('usuario1');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Cargar documentos al montar el componente
+  // Función para formatear la fecha
+  const formatFecha = (fecha) => {
+    const date = new Date(fecha);
+    return date.toLocaleDateString(); // Formato legible según la configuración local
+  };
+
+  // Obtener los documentos del usuario
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:5000/users/${userName}/documents`
+          `${API_BASE_URL}/users/${userName}/documents`
         );
-        setFileList(response.data.documents);
+        console.log('Datos recibidos:', response.data); // Inspeccionar los datos
+
+        // Enriquecer documentos con una fecha simulada si no existe
+        const enrichedDocuments = response.data.documents.map((doc) => ({
+          ...doc,
+          fecha_registro: doc.fecha_registro || new Date().toISOString(),
+        }));
+
+        setFileList(enrichedDocuments);
         setLoading(false);
       } catch (error) {
         console.error('Error al cargar los documentos:', error);
@@ -27,17 +42,15 @@ const Portafolio = () => {
     fetchDocuments();
   }, [userName]);
 
-  // Manejar descarga de archivo
+  // Función para descargar un documento
   const handleDownload = async (file) => {
     try {
-      // Extraer datos del archivo
       const { documento, nombre_archivo } = file;
 
-      // Separar encabezado y datos base64
-      const base64ContentArray = documento.split(",");
-      const base64Data = base64ContentArray.length > 1 ? base64ContentArray[1] : documento;
+      const base64ContentArray = documento.split(',');
+      const base64Data =
+        base64ContentArray.length > 1 ? base64ContentArray[1] : documento;
 
-      // Convertir base64 a Blob
       const binaryString = atob(base64Data);
       const len = binaryString.length;
       const bytes = new Uint8Array(len);
@@ -45,21 +58,19 @@ const Portafolio = () => {
         bytes[i] = binaryString.charCodeAt(i);
       }
 
-      // Crear un archivo Blob
       const blob = new Blob([bytes], { type: file.extension });
 
-      // Crear URL para descargar
       const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = downloadUrl;
-      link.setAttribute("download", `${nombre_archivo}`);
+      link.setAttribute('download', `${nombre_archivo}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error("Error al descargar el archivo:", error);
-      Swal.fire("Error al descargar el archivo", "", "error");
+      console.error('Error al descargar el archivo:', error);
+      Swal.fire('Error al descargar el archivo', '', 'error');
     }
   };
 
@@ -72,23 +83,21 @@ const Portafolio = () => {
     <div className="dashboard-contentPage">
       <h2 className="text-center mb-4">Portafolio de Documentos</h2>
 
-      {/* Botones de usuario */}
       <div className="mb-3">
         <button
-          className={`btn user-button ${userName === "usuario1" ? "active" : ""}`}
-          onClick={() => setUserName("usuario1")}
+          className={`btn user-button ${userName === 'usuario1' ? 'active' : ''}`}
+          onClick={() => setUserName('usuario1')}
         >
           Usuario 1
         </button>
         <button
-          className={`btn user-button ${userName === "usuario2" ? "active" : ""}`}
-          onClick={() => setUserName("usuario2")}
+          className={`btn user-button ${userName === 'usuario2' ? 'active' : ''}`}
+          onClick={() => setUserName('usuario2')}
         >
           Usuario 2
         </button>
       </div>
 
-      {/* Buscador de documentos */}
       <div className="mb-3">
         <input
           type="text"
@@ -99,7 +108,6 @@ const Portafolio = () => {
         />
       </div>
 
-      {/* Tabla de documentos */}
       {loading ? (
         <div className="text-center">Cargando documentos...</div>
       ) : (
@@ -119,12 +127,12 @@ const Portafolio = () => {
                 filteredDocuments.map((file, index) => (
                   <tr key={index}>
                     <td>{index + 1}</td>
-                    <td>{new Date(file.fecha_adicion).toLocaleString()}</td>
+                    <td>{formatFecha(file.fecha_registro)}</td>
                     <td>{file.extension}</td>
                     <td>{file.nombre_archivo}</td>
                     <td>
                       <button
-                        className="btn btn-primary"
+                        className="btn btn-success"
                         onClick={() => handleDownload(file)}
                       >
                         Descargar
@@ -135,7 +143,7 @@ const Portafolio = () => {
               ) : (
                 <tr>
                   <td colSpan="5" className="text-center">
-                    No hay documentos subidos.
+                    No se encontraron documentos
                   </td>
                 </tr>
               )}

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-ro
 import DocumentForm from './DocumentForm';
 import Portafolio from './Portafolio';
 import Login from './Login';
+import AdminIPs from './AdminIPs'; // Importar el nuevo componente
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './estilos.css';
 
@@ -10,7 +11,6 @@ const App = () => {
   const [fileList, setFileList] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Estado para autenticación
 
-  // Función para agregar un documento
   const addDocument = (document) => {
     setFileList([...fileList, document]);
   };
@@ -31,7 +31,7 @@ const App = () => {
 
   // Función para cerrar sesión
   const handleLogout = () => {
-    setIsAuthenticated(false); // Cambiar estado de autenticación
+    setIsAuthenticated(false);
   };
 
   return (
@@ -45,10 +45,9 @@ const App = () => {
           <section className="full-box cover dashboard-sideBar">
             <div className="full-box dashboard-sideBar-ct">
               <div className="full-box text-uppercase text-center text-titles dashboard-sideBar-title">
-                servidor
+                Servidor
               </div>
 
-              {/* Sidebar Menu */}
               <ul className="list-unstyled full-box dashboard-sideBar-Menu">
                 <li>
                   <Link to="/">Principal</Link>
@@ -59,9 +58,11 @@ const App = () => {
                 <li>
                   <Link to="/documents">Documentos</Link>
                 </li>
+                <li>
+                  <Link to="/admin">Administrar IPs</Link>
+                </li>
               </ul>
 
-              {/* Botón de Cerrar Sesión */}
               <div className="full-box text-center mt-auto">
                 <button onClick={handleLogout} className="btn btn-transparent">
                   Cerrar Sesión
@@ -72,14 +73,8 @@ const App = () => {
 
           <section className="full-box dashboard-contentPage">
             <Routes>
-              <Route
-                path="/"
-                element={<h2>Bienvenido a tu página institucional</h2>}
-              />
-              <Route
-                path="/documents"
-                element={<DocumentForm addDocument={addDocument} />}
-              />
+              <Route path="/" element={<h2>Bienvenido a tu página institucional</h2>} />
+              <Route path="/documents" element={<DocumentForm addDocument={addDocument} />} />
               <Route
                 path="/portafolio"
                 element={
@@ -90,10 +85,8 @@ const App = () => {
                   />
                 }
               />
-              <Route
-                path="*"
-                element={<Navigate to="/" replace />} // Redirige a principal si la ruta no existe
-              />
+              <Route path="/admin" element={<AdminIPs />} /> {/* Nueva ruta */}
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </section>
         </div>
